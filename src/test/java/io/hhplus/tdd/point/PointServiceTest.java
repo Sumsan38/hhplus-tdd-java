@@ -20,7 +20,7 @@ class PointServiceTest {
         long id = 1L;
 
         when(userPointTable.selectById(id)).thenReturn(new UserPoint(id, 100L, System.currentTimeMillis()));
-        
+
         // when
         UserPoint userPoint = pointService.getUserPoint(id);
 
@@ -31,8 +31,8 @@ class PointServiceTest {
     }
 
     @Test
-    @DisplayName("특정 유저의 포인트 충전을 성공한다")
-    void chargeUserPoint_withValidUserIdAndPoint() {
+    @DisplayName("특정 유저의 포인트 충전을 성공하고 히스토리를 저장한다.")
+    void chargeUserPoint_withValidUserIdAndPoint_And() {
         // given
         UserPointTable userPointTable = mock(UserPointTable.class);
         PointHistoryTable historyTable = mock(PointHistoryTable.class);
@@ -49,6 +49,8 @@ class PointServiceTest {
         // then
         assertThat(userPoint.id()).isEqualTo(id);
         assertThat(userPoint.point()).isEqualTo(amount);
+        verify(userPointTable, times(1)).insertOrUpdate(id, amount);
+        verify(historyTable, times(1)).insert(id, amount, TransactionType.CHARGE, currentTimeMillis);
     }
 
 }
