@@ -5,14 +5,14 @@ import io.hhplus.tdd.database.UserPointTable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import static io.hhplus.tdd.point.PointPolicy.*;
+
 @Service
 @RequiredArgsConstructor
 public class PointService {
 
     private final UserPointTable userPointTable;
     private final PointHistoryTable pointHistoryTable;
-
-    private static final Long MAX_POINT = 100_000_000L;
 
     /**
      * ID로 특정 사용자의 포인트 정보를 검색합니다.
@@ -37,7 +37,7 @@ public class PointService {
     public UserPoint chargeUserPoint(long id, long amount) {
         UserPoint userPoint = userPointTable.selectById(id);
         long updatedPoint = userPoint.point() + amount;
-        if(amount >= MAX_POINT || updatedPoint >= MAX_POINT) {
+        if(amount > MAX_POINT || updatedPoint > MAX_POINT) {
             throw new IllegalArgumentException("유저의 포인트 초과입니다.");
         }
 

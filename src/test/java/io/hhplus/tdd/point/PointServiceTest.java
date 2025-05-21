@@ -5,7 +5,9 @@ import io.hhplus.tdd.database.UserPointTable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static io.hhplus.tdd.point.PointPolicy.MAX_POINT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class PointServiceTest {
@@ -53,8 +55,28 @@ class PointServiceTest {
         // then
         assertThat(userPoint.id()).isEqualTo(id);
         assertThat(userPoint.point()).isEqualTo(updatedPoint);
+
         verify(userPointTable, times(1)).insertOrUpdate(id, updatedPoint);
         verify(historyTable, times(1)).insert(id, amount, TransactionType.CHARGE, currentTimeMillis);
+    }
+    
+    @Test
+    @DisplayName("특정 유저의 포인트 충전이 실패합니다(최대 잔고 초과).")
+    void chargeUserPoint_withOverPoint() {
+        // given
+        UserPointTable userPointTable = mock(UserPointTable.class);
+        PointHistoryTable historyTable = mock(PointHistoryTable.class);
+        PointService pointService = new PointService(userPointTable, historyTable);
+        long id = 1L;
+        long beforePoint = 1L;
+        long amount = MAX_POINT;
+        long currentTimeMillis = System.currentTimeMillis();
+
+        when(userPointTable.selectById(id)).thenReturn(new UserPoint(id, beforePoint, currentTimeMillis));
+
+        // when & then
+        assertThrows(IllegalArgumentException.class, () -> pointService.chargeUserPoint(id, amount));
+        verify(historyTable, never()).insert(id, amount, TransactionType.CHARGE, currentTimeMillis);
     }
 
 }
