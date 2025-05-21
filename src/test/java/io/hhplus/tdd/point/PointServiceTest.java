@@ -38,18 +38,22 @@ class PointServiceTest {
         PointHistoryTable historyTable = mock(PointHistoryTable.class);
         PointService pointService = new PointService(userPointTable, historyTable);
         long id = 1L;
-        long amount = 200L;
+        long beforePoint = 100L;    // 업데이트 전 포인트
+        long amount = 100L;         // 충전 포인트
+        long updatedPoint = 200L;   // 업데이트 후 포인트
         long currentTimeMillis = System.currentTimeMillis();
 
-        when(userPointTable.insertOrUpdate(id, amount)).thenReturn(new UserPoint(id, amount, currentTimeMillis));
+        when(userPointTable.selectById(id)).thenReturn(new UserPoint(id, beforePoint, currentTimeMillis));
+        when(userPointTable.insertOrUpdate(id, updatedPoint))
+                .thenReturn(new UserPoint(id, updatedPoint, currentTimeMillis));
 
         // when
         UserPoint userPoint = pointService.chargeUserPoint(id, amount);
 
         // then
         assertThat(userPoint.id()).isEqualTo(id);
-        assertThat(userPoint.point()).isEqualTo(amount);
-        verify(userPointTable, times(1)).insertOrUpdate(id, amount);
+        assertThat(userPoint.point()).isEqualTo(updatedPoint);
+        verify(userPointTable, times(1)).insertOrUpdate(id, updatedPoint);
         verify(historyTable, times(1)).insert(id, amount, TransactionType.CHARGE, currentTimeMillis);
     }
 

@@ -35,11 +35,13 @@ public class PointService {
      * @throws IllegalArgumentException 입력된 충전 금액이 최대 포인트 한도를 초과하는 경우
      */
     public UserPoint chargeUserPoint(long id, long amount) {
-        if(amount >= MAX_POINT) {
+        UserPoint userPoint = userPointTable.selectById(id);
+        long updatedPoint = userPoint.point() + amount;
+        if(amount >= MAX_POINT || updatedPoint >= MAX_POINT) {
             throw new IllegalArgumentException("유저의 포인트 초과입니다.");
         }
 
-        UserPoint updateUserPoint = userPointTable.insertOrUpdate(id, amount);
+        UserPoint updateUserPoint = userPointTable.insertOrUpdate(id, updatedPoint);
         pointHistoryTable.insert(id, amount, TransactionType.CHARGE, updateUserPoint.updateMillis());
 
         return updateUserPoint;
