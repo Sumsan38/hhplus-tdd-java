@@ -5,6 +5,8 @@ import io.hhplus.tdd.database.UserPointTable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -123,5 +125,31 @@ class PointServiceTest {
 
         // when & then
         assertThatThrownBy(() -> pointService.useUserPoint(id, useAmount)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("특정 유저의 포인트 히스토리를 조회합니다.")
+    void getUserPointHistory() {
+        // given
+        UserPointTable userPointTable = mock(UserPointTable.class);
+        PointHistoryTable historyTable = mock(PointHistoryTable.class);
+        PointService pointService = new PointService(userPointTable, historyTable);
+        long id = 1L;
+
+        List<PointHistory> historyList = List.of(new PointHistory[]{
+                new PointHistory(1, id, 100L, TransactionType.CHARGE, System.currentTimeMillis()),
+                new PointHistory(2, id, 100L, TransactionType.USE, System.currentTimeMillis()),
+        });
+        when(historyTable.selectAllByUserId(id)).thenReturn(historyList);
+
+        // when
+        List<PointHistory> pointHistoryList = pointService.getUserPointHistory(id);
+
+        // then
+        assertThat(pointHistoryList).hasSize(2);
+        assertThat(pointHistoryList.get(0).id()).isEqualTo(id);
+        assertThat(pointHistoryList.get(1).id()).isEqualTo(id);
+
+        verify(historyTable, times(1)).selectAllByUserId(id);
     }
 }

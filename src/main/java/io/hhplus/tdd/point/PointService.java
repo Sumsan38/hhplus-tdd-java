@@ -5,7 +5,9 @@ import io.hhplus.tdd.database.UserPointTable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import static io.hhplus.tdd.point.PointPolicy.*;
+import java.util.List;
+
+import static io.hhplus.tdd.point.PointPolicy.MAX_POINT;
 
 @Service
 @RequiredArgsConstructor
@@ -67,5 +69,16 @@ public class PointService {
         pointHistoryTable.insert(id, amount, TransactionType.USE, updateUserPoint.updateMillis());
 
         return updateUserPoint;
+    }
+
+    /**
+     * 제공된 사용자 ID를 기반으로 특정 사용자의 포인트 히스토리를 검색합니다.
+     *
+     * @param id the unique identifier of the user whose point history is to be retrieved
+     * @return a list of PointHistory instances containing the user's point transaction records
+     */
+    public List<PointHistory> getUserPointHistory(long id) {
+
+        return List.of();
     }
 }
