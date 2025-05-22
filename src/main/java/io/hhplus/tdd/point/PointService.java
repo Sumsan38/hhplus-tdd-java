@@ -46,4 +46,9 @@ public class PointService {
 
         return updateUserPoint;
     }
+
+    public UserPoint useUserPoint(long id, long amount) {
+
+        return null;
+    }
 }
