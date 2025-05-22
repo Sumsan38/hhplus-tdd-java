@@ -91,8 +91,10 @@ class PointServiceTest {
         long id = 1L;
         long amount = 100L;
         long useAmount = 100L;
+        long currentTimeMillis = System.currentTimeMillis();
 
-        when(userPointTable.selectById(id)).thenReturn(new UserPoint(id, amount, System.currentTimeMillis()));
+        when(userPointTable.selectById(id)).thenReturn(new UserPoint(id, amount, currentTimeMillis));
+        when(userPointTable.insertOrUpdate(id, 0L)).thenReturn(new UserPoint(id, 0L, currentTimeMillis));
 
         // when
         UserPoint userPoint = pointService.useUserPoint(id, useAmount);
@@ -103,7 +105,7 @@ class PointServiceTest {
 
         verify(userPointTable, times(1)).selectById(id);
         verify(userPointTable, times(1)).insertOrUpdate(id, 0L);
-        verify(historyTable, times(1)).insert(id, useAmount, TransactionType.USE, System.currentTimeMillis());
+        verify(historyTable, times(1)).insert(id, useAmount, TransactionType.USE, currentTimeMillis);
     }
 
     @Test

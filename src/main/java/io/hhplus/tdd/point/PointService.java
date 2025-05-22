@@ -47,8 +47,25 @@ public class PointService {
         return updateUserPoint;
     }
 
+    /**
+     * 사용자의 포인트를 지정된 금액만큼 차감합니다.
+     * 포인트 차감 후 업데이트된 사용자 포인트 데이터를 반환하며, 차감 기록이 저장됩니다.
+     *
+     * @param id 포인트를 차감할 사용자의 고유 식별자
+     * @param amount 차감할 포인트 금액
+     * @return 업데이트된 사용자 포인트의 데이터를 포함한 UserPoint 객체
+     * @throws IllegalArgumentException 입력된 차감 금액이 사용자의 보유 포인트를 초과하는 경우
+     */
     public UserPoint useUserPoint(long id, long amount) {
+        UserPoint userPoint = userPointTable.selectById(id);
+        long updatedPoint = userPoint.point() - amount;
+        if(updatedPoint < 0) {
+            throw new IllegalArgumentException("유저의 포인트가 부족합니다.");
+        }
 
-        return null;
+        UserPoint updateUserPoint = userPointTable.insertOrUpdate(id, updatedPoint);
+        pointHistoryTable.insert(id, amount, TransactionType.USE, updateUserPoint.updateMillis());
+
+        return updateUserPoint;
     }
 }
