@@ -147,9 +147,19 @@ class PointServiceTest {
 
         // then
         assertThat(pointHistoryList).hasSize(2);
-        assertThat(pointHistoryList.get(0).id()).isEqualTo(id);
-        assertThat(pointHistoryList.get(1).id()).isEqualTo(id);
+
+        PointHistory chargeHistory = pointHistoryList.get(0);
+        assertPointHistory(chargeHistory, id, 100L, TransactionType.CHARGE);
+
+        PointHistory useHistory = pointHistoryList.get(1);
+        assertPointHistory(useHistory, id, 100L, TransactionType.USE);
 
         verify(historyTable, times(1)).selectAllByUserId(id);
+    }
+
+    private void assertPointHistory(PointHistory history, long expectedUserId, long expectedAmount, TransactionType expectedType) {
+        assertThat(history.userId()).isEqualTo(expectedUserId);
+        assertThat(history.amount()).isEqualTo(expectedAmount);
+        assertThat(history.type()).isEqualTo(expectedType);
     }
 }

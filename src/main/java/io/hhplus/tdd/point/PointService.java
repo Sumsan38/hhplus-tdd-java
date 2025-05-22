@@ -74,11 +74,10 @@ public class PointService {
     /**
      * 제공된 사용자 ID를 기반으로 특정 사용자의 포인트 히스토리를 검색합니다.
      *
-     * @param id the unique identifier of the user whose point history is to be retrieved
-     * @return a list of PointHistory instances containing the user's point transaction records
+     * @param id 포인트 이력을 검색 할 사용자의 고유 식별자입니다.
+     * @return 사용자의 포인트 pointhistory 객체 목록
      */
     public List<PointHistory> getUserPointHistory(long id) {
-
-        return List.of();
+        return pointHistoryTable.selectAllByUserId(id);
     }
 }
