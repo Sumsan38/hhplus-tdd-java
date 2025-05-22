@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static io.hhplus.tdd.point.PointPolicy.MAX_POINT;
 
@@ -15,6 +17,9 @@ public class PointService {
 
     private final UserPointTable userPointTable;
     private final PointHistoryTable pointHistoryTable;
+
+    // 사용자별 락 저장소
+    private static final ConcurrentHashMap<Long, ReentrantLock> userLockMap = new ConcurrentHashMap<>();
 
     /**
      * ID로 특정 사용자의 포인트 정보를 검색합니다.
@@ -37,16 +42,23 @@ public class PointService {
      * @throws IllegalArgumentException 입력된 충전 금액이 최대 포인트 한도를 초과하는 경우
      */
     public UserPoint chargeUserPoint(long id, long amount) {
-        UserPoint userPoint = userPointTable.selectById(id);
-        long updatedPoint = userPoint.point() + amount;
-        if(amount > MAX_POINT || updatedPoint > MAX_POINT) {
-            throw new IllegalArgumentException("유저의 포인트 초과입니다.");
+        ReentrantLock lock = userLockMap.computeIfAbsent(id, l -> new ReentrantLock());
+        lock.lock();
+
+        try {
+            UserPoint userPoint = userPointTable.selectById(id);
+            long updatedPoint = userPoint.point() + amount;
+            if(amount > MAX_POINT || updatedPoint > MAX_POINT) {
+                throw new IllegalArgumentException("유저의 포인트 초과입니다.");
+            }
+
+            UserPoint updateUserPoint = userPointTable.insertOrUpdate(id, updatedPoint);
+            pointHistoryTable.insert(id, amount, TransactionType.CHARGE, updateUserPoint.updateMillis());
+
+            return updateUserPoint;
+        } finally {
+            lock.unlock();
         }
-
-        UserPoint updateUserPoint = userPointTable.insertOrUpdate(id, updatedPoint);
-        pointHistoryTable.insert(id, amount, TransactionType.CHARGE, updateUserPoint.updateMillis());
-
-        return updateUserPoint;
     }
 
     /**
@@ -59,16 +71,23 @@ public class PointService {
      * @throws IllegalArgumentException 입력된 차감 금액이 사용자의 보유 포인트를 초과하는 경우
      */
     public UserPoint useUserPoint(long id, long amount) {
-        UserPoint userPoint = userPointTable.selectById(id);
-        long updatedPoint = userPoint.point() - amount;
-        if(updatedPoint < 0) {
-            throw new IllegalArgumentException("유저의 포인트가 부족합니다.");
+        ReentrantLock lock = userLockMap.computeIfAbsent(id, l -> new ReentrantLock());
+        lock.lock();
+
+        try {
+            UserPoint userPoint = userPointTable.selectById(id);
+            long updatedPoint = userPoint.point() - amount;
+            if(updatedPoint < 0) {
+                throw new IllegalArgumentException("유저의 포인트가 부족합니다.");
+            }
+
+            UserPoint updateUserPoint = userPointTable.insertOrUpdate(id, updatedPoint);
+            pointHistoryTable.insert(id, amount, TransactionType.USE, updateUserPoint.updateMillis());
+
+            return updateUserPoint;
+        } finally {
+            lock.unlock();
         }
-
-        UserPoint updateUserPoint = userPointTable.insertOrUpdate(id, updatedPoint);
-        pointHistoryTable.insert(id, amount, TransactionType.USE, updateUserPoint.updateMillis());
-
-        return updateUserPoint;
     }
 
     /**
