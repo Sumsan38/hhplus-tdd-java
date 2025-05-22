@@ -23,7 +23,7 @@ try {
 ```
 ---
 
-## 테스트 케이스
+## 동시성 테스트 케이스
 1. ```chargeUserPoint_concurrency``` 동시에 여러 충전 요청이 들어올 경우에도 포인트 충전은 정확히 반영된다.
 2. ```useUserPoint_concurrency``` 동시에 여러 요청이 들어와도 포인트 사용은 모두 반영된다.
 3. ```useUserPoint_concurrency_withInsufficientPoint``` 잔액이 부족할 때 포인트 사용 요청이 들어올 경우 실패하는 경우도 존재한다.
